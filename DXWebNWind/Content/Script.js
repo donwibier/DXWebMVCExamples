@@ -82,6 +82,24 @@
     function onLeftPanelCollapsed(s, e) {
         leftAreaMenu.GetItemByName("ToggleLeftPanel").SetChecked(false);
     }
+    function onMainControlInit(s, e) {
+        var adjustmentMethod = function () {
+            var height = document.documentElement.clientHeight;
+            height -= parseInt($("#headerPanel").height());
+            height -= parseInt($("#footerWrapper").height());
+            if (height > 0)
+                s.SetHeight(height);
+        }
+        AddAdjustmentDelegate(adjustmentMethod);
+    }
+    window.onMainControlInit = onMainControlInit;
+    function onMainControlToolbarItemClick(s, e) {
+        var $exportFormat = $('#customExportCommand');
+        $exportFormat.val(e.item.name);
+        $('form').submit();
+        window.setTimeout(function () { $exportFormat.val(""); }, 0);
+    }
+    window.onMainControlToolbarItemClick = onMainControlToolbarItemClick;
 
 
     window.onControlsInitialized = onControlsInitialized;

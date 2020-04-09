@@ -10,6 +10,6 @@
 
 @using (Html.BeginForm())
 {
-	
+	@Html.Hidden("customExportCommand")
 	@Html.Action("GridViewPartial")
 }

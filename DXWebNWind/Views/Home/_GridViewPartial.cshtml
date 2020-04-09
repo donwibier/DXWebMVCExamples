@@ -7,11 +7,65 @@
 		settings.SettingsEditing.AddNewRowRouteValues = new { Controller = "Home", Action = "GridViewPartialAddNew" };
 		settings.SettingsEditing.UpdateRowRouteValues = new { Controller = "Home", Action = "GridViewPartialUpdate" };
 		settings.SettingsEditing.DeleteRowRouteValues = new { Controller = "Home", Action = "GridViewPartialDelete" };
+		settings.Width = Unit.Percentage(100);
+		settings.Settings.VerticalScrollBarMode = ScrollBarMode.Auto;
+		settings.SettingsPager.PageSize = 30;
+		settings.ClientSideEvents.Init = "onMainControlInit";
+		settings.SettingsPager.Mode = GridViewPagerMode.EndlessPaging;
+		settings.SettingsEditing.Mode = GridViewEditingMode.PopupEditForm;
+		settings.SettingsPopup.EditForm.Modal = true;
+		settings.SettingsPopup.EditForm.ShowShadow = true;
+		settings.SettingsPopup.EditForm.HorizontalAlign = PopupHorizontalAlign.WindowCenter;
+		settings.SettingsPopup.EditForm.VerticalAlign = PopupVerticalAlign.WindowCenter;
+
+		settings.BeforeGetCallbackResult = (s, e) =>
+		{
+			var g = (MVCxGridView)s;
+			if (g.IsNewRowEditing)
+				g.SettingsText.PopupEditFormCaption = "Insert new invoice";
+			else if (g.IsEditing)
+			{
+				var orderID = g.GetRowValues(g.EditingRowVisibleIndex, "OrderID");
+				g.SettingsText.PopupEditFormCaption = String.Format("Edit Invoice {0}", orderID ?? "");
+			}
+		};
+		settings.SettingsBehavior.AllowFocusedRow = true;
+		settings.Toolbars.Add(tb =>
+		{
+			tb.Enabled = true;
+			tb.Position = GridToolbarPosition.Top;
+			tb.SettingsAdaptivity.Enabled = true;
+			tb.SettingsAdaptivity.EnableCollapseRootItemsToIcons = true;
+			tb.Items.Add(GridViewToolbarCommand.New);
+			tb.Items.Add(GridViewToolbarCommand.Edit);
+			tb.Items.Add(GridViewToolbarCommand.Delete);
+			tb.Items.Add(i =>
+			{
+				i.Command = GridViewToolbarCommand.Refresh;
+				i.BeginGroup = true;
+
+			});
+			tb.Items.Add(i =>
+			{
+				i.Text = "Export to";
+				i.Image.IconID = DevExpress.Web.ASPxThemes.IconID.ActionsDownload16x16office2013;
+				i.BeginGroup = true;
+				i.AdaptivePriority = 1;
+				i.Items.Add(GridViewToolbarCommand.ExportToPdf);
+				i.Items.Add(GridViewToolbarCommand.ExportToDocx);
+				i.Items.Add(GridViewToolbarCommand.ExportToRtf);
+				i.Items.Add(GridViewToolbarCommand.ExportToXls).Text = "Export to XLS";
+				i.Items.Add(GridViewToolbarCommand.ExportToXlsx).Text = "Export to XLSX";
+			});
+		});
+		settings.ClientSideEvents.ToolbarItemClick = "onMainControlToolbarItemClick";
+		settings.SettingsExport.EnableClientSideExportAPI = true;
+		settings.SettingsExport.ExcelExportMode = DevExpress.Export.ExportType.DataAware;
 
 
 		settings.SettingsBehavior.ConfirmDelete = true;
 
-		settings.CommandColumn.Visible = true;
+		settings.CommandColumn.Visible = false;
 		settings.CommandColumn.ShowNewButton = true;
 		settings.CommandColumn.ShowDeleteButton = true;
 		settings.CommandColumn.ShowEditButton = true;
