@@ -94,5 +94,18 @@ namespace DXWebNWind.Controllers
 			}
 			return PartialView("_GridViewPartial", model.ToList());
 		}
+
+		//public ActionResult ExportTo(string customExportCommand)
+		//{
+		//	switch (customExportCommand)
+		//	{
+		//		case "CustomExportToXLS":
+		//		case "CustomExportToXLSX":
+		//			return GridViewExportDemoHelper.ExportFormatsInfo[customExportCommand](
+		//				GridViewToolbarHelper.ExportGridSettings, NorthwindDataProvider.GetEditableProducts());
+		//		default:
+		//			return RedirectToAction("Toolbar");
+		//	}
+		//}
 	}
 }

@@ -83,6 +83,7 @@
         leftAreaMenu.GetItemByName("ToggleLeftPanel").SetChecked(false);
     }
 
+
     window.onControlsInitialized = onControlsInitialized;
     window.onBrowserWindowResized = onBrowserWindowResized;
     window.onLeftMenuItemClick = onLeftMenuItemClick;
