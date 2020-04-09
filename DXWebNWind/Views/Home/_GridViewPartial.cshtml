@@ -1,0 +1,52 @@
+@{
+	var grid = Html.DevExpress().GridView(settings =>
+	{
+		settings.Name = "GridView";
+		settings.CallbackRouteValues = new { Controller = "Home", Action = "GridViewPartial" };
+
+		settings.SettingsEditing.AddNewRowRouteValues = new { Controller = "Home", Action = "GridViewPartialAddNew" };
+		settings.SettingsEditing.UpdateRowRouteValues = new { Controller = "Home", Action = "GridViewPartialUpdate" };
+		settings.SettingsEditing.DeleteRowRouteValues = new { Controller = "Home", Action = "GridViewPartialDelete" };
+		settings.SettingsEditing.Mode = GridViewEditingMode.EditFormAndDisplayRow;
+		settings.SettingsBehavior.ConfirmDelete = true;
+
+		settings.CommandColumn.Visible = true;
+		settings.CommandColumn.ShowNewButton = true;
+		settings.CommandColumn.ShowDeleteButton = true;
+		settings.CommandColumn.ShowEditButton = true;
+
+		settings.KeyFieldName = "OrderID";
+
+		settings.SettingsPager.Visible = true;
+		settings.Settings.ShowGroupPanel = true;
+		settings.Settings.ShowFilterRow = true;
+		settings.SettingsBehavior.AllowSelectByRowClick = true;
+
+		settings.SettingsAdaptivity.AdaptivityMode = GridViewAdaptivityMode.Off;
+		settings.SettingsAdaptivity.AdaptiveColumnPosition = GridViewAdaptiveColumnPosition.Right;
+		settings.SettingsAdaptivity.AdaptiveDetailColumnCount = 1;
+		settings.SettingsAdaptivity.AllowOnlyOneAdaptiveDetailExpanded = false;
+		settings.SettingsAdaptivity.HideDataCellsAtWindowInnerWidth = 0;
+
+		settings.Columns.Add("OrderID");
+		settings.Columns.Add(c => {
+			c.FieldName = "CustomerID";
+			c.Caption = "Customer";
+			c.EditorProperties().ComboBox(p => {
+				p.TextField = "CompanyName";
+				p.ValueField = "CustomerID";
+				p.DataSource = ViewBag.LookupCustomers;
+			});
+		});
+		settings.Columns.Add("EmployeeID");
+		settings.Columns.Add("OrderDate", MVCxGridViewColumnType.DateEdit);
+		settings.Columns.Add("RequiredDate", MVCxGridViewColumnType.DateEdit);
+		settings.Columns.Add("ShippedDate", MVCxGridViewColumnType.DateEdit);
+		settings.Columns.Add("ShipVia");
+	});
+	if (ViewData["EditError"] != null)
+	{
+		grid.SetEditErrorText((string)ViewData["EditError"]);
+	}
+}
+@grid.Bind(Model).GetHtml()
