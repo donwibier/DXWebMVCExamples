@@ -2,16 +2,79 @@
 	var grid = Html.DevExpress().GridView(settings =>
 	{
 		settings.Name = "GridView";
-		settings.CallbackRouteValues = new { Controller = "Home", Action = "GridViewPartial" };
+		settings.CallbackRouteValues = new
+		{
+			Controller = "Home",
+			Action = "GridViewPartial" };
 
 		settings.SettingsEditing.AddNewRowRouteValues = new { Controller = "Home", Action = "GridViewPartialAddNew" };
 		settings.SettingsEditing.UpdateRowRouteValues = new { Controller = "Home", Action = "GridViewPartialUpdate" };
 		settings.SettingsEditing.DeleteRowRouteValues = new { Controller = "Home", Action = "GridViewPartialDelete" };
 
+		settings.Width = Unit.Percentage(100);
+		settings.Settings.VerticalScrollBarMode = ScrollBarMode.Auto;
+		settings.SettingsPager.PageSize = 30;
+		settings.ClientSideEvents.Init = "onMainControlInit";
+
+		settings.SettingsPager.Mode = GridViewPagerMode.EndlessPaging;
+		settings.SettingsEditing.Mode = GridViewEditingMode.PopupEditForm;
+		settings.SettingsPopup.EditForm.Modal = true;
+		settings.SettingsPopup.EditForm.ShowShadow = true;
+		settings.SettingsPopup.EditForm.HorizontalAlign = PopupHorizontalAlign.WindowCenter;
+		settings.SettingsPopup.EditForm.VerticalAlign = PopupVerticalAlign.WindowCenter;
+
+		settings.BeforeGetCallbackResult = (s, e) =>
+		{
+			var g = (MVCxGridView)s;
+			if (g.IsNewRowEditing)
+				g.SettingsText.PopupEditFormCaption = "Insert new invoice";
+			else if (g.IsEditing)
+			{
+				var orderID = g.GetRowValues(g.EditingRowVisibleIndex, "OrderID");
+				g.SettingsText.PopupEditFormCaption = String.Format("Edit Invoice {0}", orderID ?? "");
+			}
+		};
+		settings.SettingsBehavior.AllowFocusedRow = true;
+		//added
+		settings.SettingsCustomizationDialog.Enabled = true;
+		settings.Toolbars.Add(tb =>
+		{
+			tb.Enabled = true;
+			tb.Position = GridToolbarPosition.Top;
+			tb.SettingsAdaptivity.Enabled = true;
+			tb.SettingsAdaptivity.EnableCollapseRootItemsToIcons = true;
+			tb.Items.Add(GridViewToolbarCommand.New);
+			tb.Items.Add(GridViewToolbarCommand.Edit);
+			tb.Items.Add(GridViewToolbarCommand.Delete);
+			tb.Items.Add(i =>
+			{
+				i.Command = GridViewToolbarCommand.Refresh;
+				i.BeginGroup = true;
+
+			});
+			//added
+			tb.Items.Add(GridViewToolbarCommand.ShowCustomizationDialog);
+			//==
+			tb.Items.Add(i =>
+			{
+				i.Text = "Export to";
+				i.Image.IconID = DevExpress.Web.ASPxThemes.IconID.ActionsDownload16x16office2013;
+				i.BeginGroup = true;
+				i.AdaptivePriority = 1;
+				i.Items.Add(GridViewToolbarCommand.ExportToPdf);
+				i.Items.Add(GridViewToolbarCommand.ExportToDocx);
+				i.Items.Add(GridViewToolbarCommand.ExportToRtf);
+				i.Items.Add(GridViewToolbarCommand.ExportToXls).Text = "Export to XLS";
+				i.Items.Add(GridViewToolbarCommand.ExportToXlsx).Text = "Export to XLSX";
+			});
+		});
+		settings.ClientSideEvents.ToolbarItemClick = "onMainControlToolbarItemClick";
+		settings.SettingsExport.EnableClientSideExportAPI = true;
+		settings.SettingsExport.ExcelExportMode = DevExpress.Export.ExportType.DataAware;
 
 		settings.SettingsBehavior.ConfirmDelete = true;
 
-		settings.CommandColumn.Visible = true;
+		settings.CommandColumn.Visible = false;
 		settings.CommandColumn.ShowNewButton = true;
 		settings.CommandColumn.ShowDeleteButton = true;
 		settings.CommandColumn.ShowEditButton = true;
@@ -23,11 +86,46 @@
 		settings.Settings.ShowFilterRow = true;
 		settings.SettingsBehavior.AllowSelectByRowClick = true;
 
-		settings.SettingsAdaptivity.AdaptivityMode = GridViewAdaptivityMode.Off;
+		settings.SettingsAdaptivity.AdaptivityMode = GridViewAdaptivityMode.HideDataCells; // Off;
 		settings.SettingsAdaptivity.AdaptiveColumnPosition = GridViewAdaptiveColumnPosition.Right;
-		settings.SettingsAdaptivity.AdaptiveDetailColumnCount = 1;
+		settings.SettingsAdaptivity.AdaptiveDetailColumnCount = 2;
 		settings.SettingsAdaptivity.AllowOnlyOneAdaptiveDetailExpanded = false;
 		settings.SettingsAdaptivity.HideDataCellsAtWindowInnerWidth = 0;
+
+		//added
+		settings.EditFormLayoutProperties.ColCount = 2;
+		settings.EditFormLayoutProperties.AlignItemCaptionsInAllGroups = true;
+		settings.EditFormLayoutProperties.SettingsAdaptivity.AdaptivityMode = FormLayoutAdaptivityMode.SingleColumnWindowLimit;
+		settings.EditFormLayoutProperties.SettingsAdaptivity.SwitchToSingleColumnAtWindowInnerWidth = 600;
+		
+		//settings.SettingsPopup.EditForm.Width = Unit.Pixel(500);
+
+		settings.SettingsPopup.EditForm.VerticalAlign = PopupVerticalAlign.WindowCenter;
+		settings.SettingsPopup.EditForm.HorizontalAlign = PopupHorizontalAlign.WindowCenter;
+		settings.SettingsPopup.EditForm.ShowViewportScrollbarWhenModal = true;		
+
+		settings.EditFormLayoutProperties.Items.Add("EmployeeID");
+		settings.EditFormLayoutProperties.Items.Add("OrderDate");
+		settings.EditFormLayoutProperties.Items.Add("RequiredDate");
+		settings.EditFormLayoutProperties.Items.Add("ShippedDate");
+		settings.EditFormLayoutProperties.Items.Add("ShipVia");
+		settings.EditFormLayoutProperties.Items.Add("ShipName");
+		settings.EditFormLayoutProperties.Items.Add("ShipAddress");
+		settings.EditFormLayoutProperties.Items.Add("ShipCity");
+		settings.EditFormLayoutProperties.Items.Add("ShipRegion");
+		settings.EditFormLayoutProperties.Items.Add("ShipPostalCode");
+		settings.EditFormLayoutProperties.Items.Add("ShipCountry");
+		settings.EditFormLayoutProperties.Items.AddCommandItem(c => {
+			c.HorizontalAlign = FormLayoutHorizontalAlign.Right;			
+		});
+		settings.HtmlEditFormCreated += (s, e) =>
+		{
+			ASPxGridViewEditFormEventArgs g = e as ASPxGridViewEditFormEventArgs;
+			ASPxPopupControl pu = g.EditForm.NamingContainer as ASPxPopupControl;
+			pu.ClientSideEvents.PopUp = "onEditOrdersPopup";
+			pu.ClientSideEvents.CloseUp = "onEditOrdersCloseUp";
+		};
+		//==
 
 		settings.Columns.Add("OrderID");
 		settings.Columns.Add(c => {
@@ -39,11 +137,44 @@
 				p.DataSource = ViewBag.LookupCustomers;
 			});
 		});
-		settings.Columns.Add("EmployeeID");
+		//settings.Columns.Add("EmployeeID");
+		//changed
+		settings.Columns.Add(c =>
+		{
+			c.FieldName = "EmployeeID";
+			c.Caption = "Employee";
+			c.EditorProperties().ComboBox(p =>
+			{
+				p.TextField = "Name";
+				p.ValueField = "EmployeeID";
+				p.DataSource = ViewBag.LookupEmployees;
+			});
+		});
+		//==
 		settings.Columns.Add("OrderDate", MVCxGridViewColumnType.DateEdit);
 		settings.Columns.Add("RequiredDate", MVCxGridViewColumnType.DateEdit);
 		settings.Columns.Add("ShippedDate", MVCxGridViewColumnType.DateEdit);
-		settings.Columns.Add("ShipVia");
+		//settings.Columns.Add("ShipVia");
+		// added
+		settings.Columns.Add(c =>
+		{
+			c.FieldName = "ShipVia";
+			c.Caption = "Ship Via";
+			c.AdaptivePriority = 2;
+			c.EditorProperties().ComboBox(p =>
+			{
+				p.TextField = "Name";
+				p.ValueField = "ShipperID";
+				p.DataSource = ViewBag.LookupShippers;
+			});
+		});
+		settings.Columns.Add("ShipName").AdaptivePriority = 3;
+		settings.Columns.Add("ShipAddress").AdaptivePriority = 3;
+		settings.Columns.Add("ShipCity").AdaptivePriority = 3;
+		settings.Columns.Add("ShipRegion").AdaptivePriority = 3;
+		settings.Columns.Add("ShipPostalCode").AdaptivePriority = 3;
+		settings.Columns.Add("ShipCountry").AdaptivePriority = 3;
+		//==
 	});
 	if (ViewData["EditError"] != null)
 	{

@@ -14,18 +14,36 @@ namespace DXWebNWind.Controllers
             return View();
         }
 
-		DXWebNWind.Code.NWindEF.NWindDBContext db = new DXWebNWind.Code.NWindEF.NWindDBContext();
-
-		[ValidateInput(false)]
-		public ActionResult GridViewPartial()
+		protected void PopulateViewBag()
 		{
-			var model = db.Orders;
 			ViewBag.LookupCustomers = (from c in db.Customers
 									   select new
 									   {
 										   CustomerID = c.CustomerID,
 										   CompanyName = c.CompanyName
 									   }).ToList();
+			// added
+			ViewBag.LookupEmployees = (from e in db.Employees
+									   select new
+									   {
+										   EmployeeID = e.EmployeeID,
+										   Name = e.LastName + ", " + e.FirstName
+									   }).ToList();
+			ViewBag.LookupShippers = (from s in db.Shippers
+									  select new
+									  {
+										  ShipperID = s.ShipperID,
+										  Name = s.CompanyName
+									  }).ToList();
+			//==
+		}
+		DXWebNWind.Code.NWindEF.NWindDBContext db = new DXWebNWind.Code.NWindEF.NWindDBContext();
+
+		[ValidateInput(false)]
+		public ActionResult GridViewPartial()
+		{
+			var model = db.Orders;
+			PopulateViewBag();
 
 			return PartialView("_GridViewPartial", model.ToList());
 		}
@@ -48,6 +66,8 @@ namespace DXWebNWind.Controllers
 			}
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
+
+			PopulateViewBag();
 			return PartialView("_GridViewPartial", model.ToList());
 		}
 		[HttpPost, ValidateInput(false)]
@@ -72,6 +92,8 @@ namespace DXWebNWind.Controllers
 			}
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
+			
+			PopulateViewBag();
 			return PartialView("_GridViewPartial", model.ToList());
 		}
 		[HttpPost, ValidateInput(false)]
@@ -92,6 +114,7 @@ namespace DXWebNWind.Controllers
 					ViewData["EditError"] = e.Message;
 				}
 			}
+			PopulateViewBag();
 			return PartialView("_GridViewPartial", model.ToList());
 		}
 

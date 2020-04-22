@@ -83,6 +83,45 @@
         leftAreaMenu.GetItemByName("ToggleLeftPanel").SetChecked(false);
     }
 
+    function onMainControlInit(s, e) {
+        var adjustmentMethod = function () {
+            var height = document.documentElement.clientHeight;
+            height -= parseInt($("#headerPanel").height());
+            height -= parseInt($("#footerWrapper").height());
+            if (height > 0)
+                s.SetHeight(height);
+            //added
+            repositionEditOrdersPopup();
+        }
+        AddAdjustmentDelegate(adjustmentMethod);
+    }
+    window.onMainControlInit = onMainControlInit;
+    function onMainControlToolbarItemClick(s, e) {
+        if (e.item.name.startsWith("Export")) {
+            var $exportFormat = $('#customExportCommand');
+            $exportFormat.val(e.item.name);
+            $('form').submit();
+            window.setTimeout(function () { $exportFormat.val(""); }, 0);
+        }
+    }
+    window.onMainControlToolbarItemClick = onMainControlToolbarItemClick;
+    function repositionEditOrdersPopup() {
+        var width = window.innerWidth;
+        if ((width < 600) && (editPopupWnd != null)) {
+            editPopupWnd.SetMaximized(true);
+        }
+	}
+    var editPopupWnd = null;
+    function onEditOrdersPopup(s, e) {
+        editPopupWnd = s;
+        repositionEditOrdersPopup();
+	}
+    function onEditOrdersCloseUp(s, e) {
+        editPopupWnd = null;
+	}
+    
+    window.onEditOrdersPopup = onEditOrdersPopup;
+    window.onEditOrdersCloseUp = onEditOrdersCloseUp;
 
     window.onControlsInitialized = onControlsInitialized;
     window.onBrowserWindowResized = onBrowserWindowResized;
