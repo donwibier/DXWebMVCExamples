@@ -90,7 +90,6 @@
             height -= parseInt($("#footerWrapper").height());
             if (height > 0)
                 s.SetHeight(height);
-            //added
             repositionEditOrdersPopup();
         }
         AddAdjustmentDelegate(adjustmentMethod);
@@ -105,23 +104,24 @@
         }
     }
     window.onMainControlToolbarItemClick = onMainControlToolbarItemClick;
+    var editPopupWnd = null;
     function repositionEditOrdersPopup() {
         var width = window.innerWidth;
         if ((width < 600) && (editPopupWnd != null)) {
             editPopupWnd.SetMaximized(true);
         }
-	}
-    var editPopupWnd = null;
+    }
     function onEditOrdersPopup(s, e) {
         editPopupWnd = s;
         repositionEditOrdersPopup();
-	}
+    }
     function onEditOrdersCloseUp(s, e) {
         editPopupWnd = null;
-	}
-    
+    }
+
     window.onEditOrdersPopup = onEditOrdersPopup;
     window.onEditOrdersCloseUp = onEditOrdersCloseUp;
+
 
     window.onControlsInitialized = onControlsInitialized;
     window.onBrowserWindowResized = onBrowserWindowResized;

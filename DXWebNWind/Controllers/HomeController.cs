@@ -14,7 +14,18 @@ namespace DXWebNWind.Controllers
             return View();
         }
 
-		protected void PopulateViewBag()
+		DXWebNWind.Code.NWindEF.NWindDBContext db = new DXWebNWind.Code.NWindEF.NWindDBContext();
+
+		[ValidateInput(false)]
+		public ActionResult GridViewPartial()
+		{
+			var model = db.Orders;
+			PopulateViewBag();
+
+			return PartialView("_GridViewPartial", model.ToList());
+		}
+
+		private void PopulateViewBag()
 		{
 			ViewBag.LookupCustomers = (from c in db.Customers
 									   select new
@@ -22,7 +33,6 @@ namespace DXWebNWind.Controllers
 										   CustomerID = c.CustomerID,
 										   CompanyName = c.CompanyName
 									   }).ToList();
-			// added
 			ViewBag.LookupEmployees = (from e in db.Employees
 									   select new
 									   {
@@ -35,17 +45,7 @@ namespace DXWebNWind.Controllers
 										  ShipperID = s.ShipperID,
 										  Name = s.CompanyName
 									  }).ToList();
-			//==
-		}
-		DXWebNWind.Code.NWindEF.NWindDBContext db = new DXWebNWind.Code.NWindEF.NWindDBContext();
 
-		[ValidateInput(false)]
-		public ActionResult GridViewPartial()
-		{
-			var model = db.Orders;
-			PopulateViewBag();
-
-			return PartialView("_GridViewPartial", model.ToList());
 		}
 
 		[HttpPost, ValidateInput(false)]
@@ -66,7 +66,6 @@ namespace DXWebNWind.Controllers
 			}
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
-
 			PopulateViewBag();
 			return PartialView("_GridViewPartial", model.ToList());
 		}
@@ -92,7 +91,6 @@ namespace DXWebNWind.Controllers
 			}
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
-			
 			PopulateViewBag();
 			return PartialView("_GridViewPartial", model.ToList());
 		}
@@ -117,18 +115,5 @@ namespace DXWebNWind.Controllers
 			PopulateViewBag();
 			return PartialView("_GridViewPartial", model.ToList());
 		}
-
-		//public ActionResult ExportTo(string customExportCommand)
-		//{
-		//	switch (customExportCommand)
-		//	{
-		//		case "CustomExportToXLS":
-		//		case "CustomExportToXLSX":
-		//			return GridViewExportDemoHelper.ExportFormatsInfo[customExportCommand](
-		//				GridViewToolbarHelper.ExportGridSettings, NorthwindDataProvider.GetEditableProducts());
-		//		default:
-		//			return RedirectToAction("Toolbar");
-		//	}
-		//}
 	}
 }
