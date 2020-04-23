@@ -241,6 +241,7 @@
     <Content Include="Views\Scheduler\SchedulerPartial.cshtml" />
     <None Include="packages.config" />
     <Content Include="Views\Home\_GridViewPartial.cshtml" />
+    <Content Include="Views\Home\_GridViewDetailPartial.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

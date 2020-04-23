@@ -1,0 +1,71 @@
+@using DXWebNWind.Code.NWindEF
+@{
+	var grid = Html.DevExpress().GridView<Order_Details>(settings => {
+		settings.Name = "GVDetail_" + ViewBag.OrderID;
+		//changed
+		settings.CallbackRouteValues = new { Controller = "Home", Action = "GridViewDetailPartial",
+			OrderID = ViewBag.OrderID };
+
+		settings.SettingsEditing.AddNewRowRouteValues = new { Controller = "Home", Action = "GridViewDetailPartialAddNew" };
+		settings.SettingsEditing.UpdateRowRouteValues = new { Controller = "Home", Action = "GridViewDetailPartialUpdate" };
+		settings.SettingsEditing.DeleteRowRouteValues = new { Controller = "Home", Action = "GridViewDetailPartialDelete" };
+		settings.SettingsEditing.Mode = GridViewEditingMode.EditFormAndDisplayRow;
+		settings.SettingsBehavior.ConfirmDelete = true;
+
+
+		//changed
+		settings.CommandColumn.Visible = false;
+		settings.CommandColumn.ShowNewButton = true;
+		settings.CommandColumn.ShowDeleteButton = true;
+		settings.CommandColumn.ShowEditButton = true;
+
+		settings.KeyFieldName = "OrderID;ProductID";
+		//changed
+		settings.SettingsPager.Visible = false;
+		settings.Settings.ShowGroupPanel = false;
+		settings.Settings.ShowFilterRow = false;
+		settings.SettingsBehavior.AllowSelectByRowClick = true;
+
+		settings.SettingsAdaptivity.AdaptivityMode = GridViewAdaptivityMode.HideDataCells;
+		settings.SettingsAdaptivity.AdaptiveColumnPosition = GridViewAdaptiveColumnPosition.Right;
+		settings.SettingsAdaptivity.AdaptiveDetailColumnCount = 2;
+		settings.SettingsAdaptivity.AllowOnlyOneAdaptiveDetailExpanded = true;
+		settings.SettingsAdaptivity.HideDataCellsAtWindowInnerWidth = 0;
+
+		//changed
+		settings.Columns.Add("OrderID").Visible = false;
+		settings.Columns.Add("ProductID").Visible = false;
+		settings.Columns.Add(m => m.Products.ProductName);
+		settings.Columns.Add("UnitPrice").PropertiesEdit.DisplayFormatString="c";
+		settings.Columns.Add("Quantity");
+		settings.Columns.Add("Discount");
+		//added
+		settings.Columns.Add(c => {
+			c.FieldName = "Total";
+			c.UnboundType = DevExpress.Data.UnboundColumnType.Decimal;
+			c.PropertiesEdit.DisplayFormatString = "c";
+		});
+
+		settings.CustomUnboundColumnData = (s, e) =>
+		{
+			if (e.Column.FieldName == "Total")
+			{
+				decimal price = (decimal)e.GetListSourceFieldValue("UnitPrice");
+				short qty = (short)e.GetListSourceFieldValue("Quantity");
+				e.Value = price * qty;
+			}
+		};
+		
+		settings.Settings.ShowFooter = true;
+		settings.TotalSummary.Add(DevExpress.Data.SummaryItemType.Sum, "Total");
+		settings.TotalSummary.Add(DevExpress.Data.SummaryItemType.Sum, "Quantity");
+
+		settings.SettingsContextMenu.Enabled = true;
+		settings.SettingsContextMenu.EnableColumnMenu = DefaultBoolean.False;
+
+	});
+	if (ViewData["EditError"] != null) {
+		grid.SetEditErrorText((string)ViewData["EditError"]);
+	}
+}
+@grid.Bind(Model).GetHtml()

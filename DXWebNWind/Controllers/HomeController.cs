@@ -115,5 +115,82 @@ namespace DXWebNWind.Controllers
 			PopulateViewBag();
 			return PartialView("_GridViewPartial", model.ToList());
 		}
+		
+		[ValidateInput(false)]
+		public ActionResult GridViewDetailPartial(int orderID)
+		{
+			//changed
+			var model = from n in db.Order_Details
+						where (n.OrderID == orderID) 
+						select n;
+			ViewBag.OrderID = orderID;
+			// added
+			return PartialView("_GridViewDetailPartial", model.ToList());
+		}
+
+		[HttpPost, ValidateInput(false)]
+		public ActionResult GridViewDetailPartialAddNew(DXWebNWind.Code.NWindEF.Order_Details item)
+		{
+			var model = db.Order_Details;
+			if (ModelState.IsValid)
+			{
+				try
+				{
+					model.Add(item);
+					db.SaveChanges();
+				}
+				catch (Exception e)
+				{
+					ViewData["EditError"] = e.Message;
+				}
+			}
+			else
+				ViewData["EditError"] = "Please, correct all errors.";
+			return PartialView("_GridViewDetailPartial", model.ToList());
+		}
+		[HttpPost, ValidateInput(false)]
+		public ActionResult GridViewDetailPartialUpdate(DXWebNWind.Code.NWindEF.Order_Details item)
+		{
+			var model = db.Order_Details;
+			if (ModelState.IsValid)
+			{
+				try
+				{
+					var modelItem = model.FirstOrDefault(it => it.OrderID == item.OrderID);
+					if (modelItem != null)
+					{
+						this.UpdateModel(modelItem);
+						db.SaveChanges();
+					}
+				}
+				catch (Exception e)
+				{
+					ViewData["EditError"] = e.Message;
+				}
+			}
+			else
+				ViewData["EditError"] = "Please, correct all errors.";
+			return PartialView("_GridViewDetailPartial", model.ToList());
+		}
+		[HttpPost, ValidateInput(false)]
+		public ActionResult GridViewDetailPartialDelete(System.Int32 OrderID)
+		{
+			var model = db.Order_Details;
+			if (OrderID >= 0)
+			{
+				try
+				{
+					var item = model.FirstOrDefault(it => it.OrderID == OrderID);
+					if (item != null)
+						model.Remove(item);
+					db.SaveChanges();
+				}
+				catch (Exception e)
+				{
+					ViewData["EditError"] = e.Message;
+				}
+			}
+			return PartialView("_GridViewDetailPartial", model.ToList());
+		}
 	}
 }

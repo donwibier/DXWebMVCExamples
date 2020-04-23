@@ -103,8 +103,15 @@
 			pu.ClientSideEvents.PopUp = "onEditOrdersPopup";
 			pu.ClientSideEvents.CloseUp = "onEditOrdersCloseUp";
 		};
+		//added
+		settings.SettingsDetail.AllowOnlyOneMasterRowExpanded = false;
+		settings.SettingsDetail.ShowDetailRow = true;
 
-
+		settings.SetDetailRowTemplateContent(c =>
+		{
+			Html.RenderAction("GridViewDetailPartial", new { OrderID = DataBinder.Eval(c.DataItem, "OrderID") });
+		});
+		//===
 		settings.Columns.Add("OrderID");
 		settings.Columns.Add(c =>
 		{
