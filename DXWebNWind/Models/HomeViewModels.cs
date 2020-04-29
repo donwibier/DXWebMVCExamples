@@ -1,5 +1,4 @@
-﻿using DXWebNWind.Code;
-using DXWebNWind.Code.NWindEF;
+﻿using DXWebNWind.Code.NWindEF;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +6,12 @@ using System.Web;
 
 namespace DXWebNWind.Models
 {
+	public class LookupItem<TID>
+	{
+		public TID ID { get; set; }
+		public string Text { get; set; }
+	}
+
 	public class HomeViewModel
 	{
 		public IEnumerable<Orders> Orders { get; set; }

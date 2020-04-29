@@ -255,7 +255,6 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Code\AuthHelper.cs" />
     <Compile Include="Code\DBContext.cs" />
-    <Compile Include="Code\EFExtensions.cs" />
     <Compile Include="Code\NWindEF\Alphabetical_list_of_products.cs" />
     <Compile Include="Code\NWindEF\Categories.cs" />
     <Compile Include="Code\NWindEF\Category_Sales_for_1997.cs" />
