@@ -1,63 +1,125 @@
 using DevExpress.Web.Mvc;
+using DXWebNWind.Code.NWindEF;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 
 namespace DXWebNWind.Controllers
 {
-    public class HomeController : Controller
-    {
-        public ActionResult Index()
-        {
-            return View();
-        }
+	public class LookupItem<TID>
+	{
+		public TID ID { get; set; }
+		public string Text { get; set; }
+	}
+	public class HomeViewModel
+	{
+		public IEnumerable<Orders> Orders { get; set; }
+		public IEnumerable<LookupItem<string>> Customers { get; set; }
+		public IEnumerable<LookupItem<int>> Employees { get; set; }
+		public IEnumerable<LookupItem<int>> Shippers { get; set; }
+	}
 
-		DXWebNWind.Code.NWindEF.NWindDBContext db = new DXWebNWind.Code.NWindEF.NWindDBContext();
+	public class HomeViewDetailModel
+	{
+		public int OrderID { get; set; }
+		public IEnumerable<Order_Details> Details { get; set; }
+		public IEnumerable<LookupItem<int>> Products { get; set; }
+	}
+
+	public class HomeController : Controller
+	{
+		public ActionResult Index()
+		{
+			return View();
+		}
+
+		//NWindDBContext nwindCtx = new NWindDBContext();
+		protected TResult DBExec<TResult>(Func<NWindDBContext, TResult> func)
+		{
+			using (NWindDBContext ctx = new NWindDBContext())
+			{
+				var result = func(ctx);
+				return result;
+			}
+		}
+		protected void DBExec(Action<NWindDBContext> action)
+		{
+			using (NWindDBContext ctx = new NWindDBContext())
+			{
+				action(ctx);				
+			}
+		}
+		protected IEnumerable<LookupItem<TID>> DBGetLookup<TID>(Func<NWindDBContext, IEnumerable<LookupItem<TID>>> func)
+		{
+			var result = DBExec(func);
+			return result;
+
+		}
+		//protected async Task<IEnumerable<LookupItem<TID>>> DBGetLookupAsync<TID>(Func<NWindDBContext, IEnumerable<LookupItem<TID>>> func)
+		//{
+		//	return await Task.FromResult(DBGetLookup(func));
+		//}
+
+		//protected async Task<TResult> DBExecAsync<TResult>(Func<NWindDBContext, TResult> func)
+		//{
+		//	return await Task.FromResult(DBExec(func));
+		//}
+
+		//protected async Task DBExecAsync(Action<NWindDBContext> action)
+		//{
+		//	await Task.Run(() => DBExec(action));
+		//}
+
+		protected HomeViewModel GetModel()
+		{
+			var result = new HomeViewModel
+			{
+				Customers = DBGetLookup<string>((db) => (from c in db.Customers
+																	select new LookupItem<string>
+																	{
+																		ID = c.CustomerID,
+																		Text = c.CompanyName
+																	}).ToList()),
+				Employees = DBGetLookup<int>((db) => (from c in db.Employees
+																 select new LookupItem<int>
+																 {
+																	 ID = c.EmployeeID,
+																	 Text = c.LastName + ", " + c.FirstName
+																 }).ToList()),
+				Shippers = DBGetLookup<int>((db) => (from s in db.Shippers
+																select new LookupItem<int>
+																{
+																	ID = s.ShipperID,
+																	Text = s.CompanyName
+																}).ToList()),
+				Orders = DBExec<IEnumerable<Orders>>((db) => db.Orders.ToList())
+			};
+
+			return result;
+		}
 
 		[ValidateInput(false)]
 		public ActionResult GridViewPartial()
 		{
-			var model = db.Orders;
-			PopulateViewBag();
-
-			return PartialView("_GridViewPartial", model.ToList());
-		}
-
-		private void PopulateViewBag()
-		{
-			ViewBag.LookupCustomers = (from c in db.Customers
-									   select new
-									   {
-										   CustomerID = c.CustomerID,
-										   CompanyName = c.CompanyName
-									   }).ToList();
-			ViewBag.LookupEmployees = (from e in db.Employees
-									   select new
-									   {
-										   EmployeeID = e.EmployeeID,
-										   Name = e.LastName + ", " + e.FirstName
-									   }).ToList();
-			ViewBag.LookupShippers = (from s in db.Shippers
-									  select new
-									  {
-										  ShipperID = s.ShipperID,
-										  Name = s.CompanyName
-									  }).ToList();
-
+			var model = GetModel();
+			return PartialView("_GridViewPartial", model);
 		}
 
 		[HttpPost, ValidateInput(false)]
 		public ActionResult GridViewPartialAddNew(DXWebNWind.Code.NWindEF.Orders item)
 		{
-			var model = db.Orders;
 			if (ModelState.IsValid)
 			{
 				try
 				{
-					model.Add(item);
-					db.SaveChanges();
+					DBExec((db) =>
+					{
+						db.Orders.AddRange(new Orders[] { item });
+						db.SaveChanges();						
+					});
 				}
 				catch (Exception e)
 				{
@@ -66,23 +128,25 @@ namespace DXWebNWind.Controllers
 			}
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
-			PopulateViewBag();
-			return PartialView("_GridViewPartial", model.ToList());
+
+			return PartialView("_GridViewPartial", GetModel());
 		}
 		[HttpPost, ValidateInput(false)]
 		public ActionResult GridViewPartialUpdate(DXWebNWind.Code.NWindEF.Orders item)
 		{
-			var model = db.Orders;
 			if (ModelState.IsValid)
 			{
 				try
 				{
-					var modelItem = model.FirstOrDefault(it => it.OrderID == item.OrderID);
-					if (modelItem != null)
+					DBExec((db) =>
 					{
-						this.UpdateModel(modelItem);
-						db.SaveChanges();
-					}
+						var modelItem = db.Orders.FirstOrDefault(it => it.OrderID == item.OrderID);
+						if (modelItem != null)
+						{
+							this.UpdateModel(modelItem);
+							db.SaveChanges();
+						}
+					});
 				}
 				catch (Exception e)
 				{
@@ -91,77 +155,72 @@ namespace DXWebNWind.Controllers
 			}
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
-			PopulateViewBag();
-			return PartialView("_GridViewPartial", model.ToList());
+
+			return PartialView("_GridViewPartial", GetModel());
 		}
 		[HttpPost, ValidateInput(false)]
 		public ActionResult GridViewPartialDelete(System.Int32 OrderID)
 		{
-			var model = db.Orders;
 			if (OrderID >= 0)
 			{
 				try
 				{
-					var item = model.FirstOrDefault(it => it.OrderID == OrderID);
-					if (item != null)
-						model.Remove(item);
-					db.SaveChanges();
+					DBExec((db) =>
+					{
+						var item = db.Orders.FirstOrDefault(it => it.OrderID == OrderID);
+						if (item != null)
+							db.Orders.Remove(item);
+						db.SaveChanges();
+					});
 				}
 				catch (Exception e)
 				{
 					ViewData["EditError"] = e.Message;
 				}
 			}
-			PopulateViewBag();
-			return PartialView("_GridViewPartial", model.ToList());
+
+			return PartialView("_GridViewPartial", GetModel());
 		}
-		
-		[ValidateInput(false)]
-		public ActionResult GridViewDetailPartial(int orderID)
+
+		// added
+		protected HomeViewDetailModel GetDetailModel(int orderID)
 		{
-			//changed
-			var model = from n in db.Order_Details
-						where (n.OrderID == orderID) 
-						select n;
-			ViewBag.OrderID = orderID;
-			// added
-			return PartialView("_GridViewDetailPartial", model.ToList());
+			var result = new HomeViewDetailModel
+			{
+				OrderID = orderID,
+				Products = DBGetLookup<int>((db) => (from c in db.Products
+														   select new LookupItem<int>
+														   {
+															   ID = c.ProductID,
+															   Text = c.ProductName
+														   }).ToList()),
+				Details = DBExec<IEnumerable<Order_Details>>((db) => (from n in db.Order_Details
+																	  where (n.OrderID == orderID)
+																	  select n).ToList())
+			};
+			return result;
+		}
+
+		[ValidateInput(false)]
+		public async Task<ActionResult> GridViewDetailPartial(int orderID)
+		{
+			//changed			
+			return PartialView("_GridViewDetailPartial", GetDetailModel(orderID));
 		}
 
 		[HttpPost, ValidateInput(false)]
-		public ActionResult GridViewDetailPartialAddNew(DXWebNWind.Code.NWindEF.Order_Details item)
+		public ActionResult GridViewDetailPartialAddNew(int orderID, Order_Details item)
 		{
-			var model = db.Order_Details;
+			//changed
 			if (ModelState.IsValid)
 			{
 				try
 				{
-					model.Add(item);
-					db.SaveChanges();
-				}
-				catch (Exception e)
-				{
-					ViewData["EditError"] = e.Message;
-				}
-			}
-			else
-				ViewData["EditError"] = "Please, correct all errors.";
-			return PartialView("_GridViewDetailPartial", model.ToList());
-		}
-		[HttpPost, ValidateInput(false)]
-		public ActionResult GridViewDetailPartialUpdate(DXWebNWind.Code.NWindEF.Order_Details item)
-		{
-			var model = db.Order_Details;
-			if (ModelState.IsValid)
-			{
-				try
-				{
-					var modelItem = model.FirstOrDefault(it => it.OrderID == item.OrderID);
-					if (modelItem != null)
+					DBExec((db) =>
 					{
-						this.UpdateModel(modelItem);
+						db.Order_Details.AddRange(new Order_Details[] { item }); //changed
 						db.SaveChanges();
-					}
+					});
 				}
 				catch (Exception e)
 				{
@@ -170,27 +229,71 @@ namespace DXWebNWind.Controllers
 			}
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
-			return PartialView("_GridViewDetailPartial", model.ToList());
+
+			return PartialView("_GridViewDetailPartial", GetDetailModel(orderID));
 		}
 		[HttpPost, ValidateInput(false)]
-		public ActionResult GridViewDetailPartialDelete(System.Int32 OrderID)
+		public ActionResult GridViewDetailPartialUpdate(int orderID, int newProductID, Order_Details item)
 		{
-			var model = db.Order_Details;
-			if (OrderID >= 0)
+			//changed
+			if (ModelState.IsValid)
 			{
 				try
 				{
-					var item = model.FirstOrDefault(it => it.OrderID == OrderID);
-					if (item != null)
-						model.Remove(item);
-					db.SaveChanges();
+					//changed
+					DBExec((db) =>
+					{
+						var modelItem = db.Order_Details.FirstOrDefault(it => it.OrderID == orderID && it.ProductID == item.ProductID);
+						if (modelItem != null)
+						{
+							this.UpdateModel(modelItem);
+							db.SaveChanges();
+
+							if (item.ProductID != newProductID)
+							{
+								if (db.Order_Details.Where(d => d.OrderID == orderID && d.ProductID == newProductID).Count() > 0)
+									throw new Exception($"Product with ProductID = {newProductID} already exists in this order");
+
+								db.Database.ExecuteSqlCommand("UPDATE [Order Details] SET ProductID = @p0 WHERE OrderID = @p1 AND ProductID = @p2;",
+									newProductID, orderID, item.ProductID);
+								db.SaveChanges();
+							}
+						}
+					});
 				}
 				catch (Exception e)
 				{
 					ViewData["EditError"] = e.Message;
 				}
 			}
-			return PartialView("_GridViewDetailPartial", model.ToList());
+			else
+				ViewData["EditError"] = "Please, correct all errors.";
+
+			return PartialView("_GridViewDetailPartial", GetDetailModel(orderID));
+		}
+		[HttpPost, ValidateInput(false)]
+		public ActionResult GridViewDetailPartialDelete(int orderID, int productID)
+		{
+			//changed
+			if (orderID >= 0 && productID > 0)
+			{
+				try
+				{
+					//changed
+					DBExec((db) =>
+					{
+						var item = db.Order_Details.FirstOrDefault(it => it.OrderID == orderID && it.ProductID == productID);
+						if (item != null)
+							db.Order_Details.Remove(item);
+						db.SaveChanges();
+					});
+				}
+				catch (Exception e)
+				{
+					ViewData["EditError"] = e.Message;
+				}
+			}
+			return PartialView("_GridViewDetailPartial", GetDetailModel(orderID));
 		}
 	}
 }

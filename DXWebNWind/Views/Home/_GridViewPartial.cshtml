@@ -1,3 +1,4 @@
+@model DXWebNWind.Controllers.HomeViewModel
 @{
 	var grid = Html.DevExpress().GridView(settings =>
 	{
@@ -119,9 +120,9 @@
 			c.Caption = "Customer";
 			c.EditorProperties().ComboBox(p =>
 			{
-				p.TextField = "CompanyName";
-				p.ValueField = "CustomerID";
-				p.DataSource = ViewBag.LookupCustomers;
+				p.TextField = "Text";
+				p.ValueField = "ID";
+				p.DataSource = Model.Customers;
 			});
 		});
 		settings.Columns.Add(c =>
@@ -130,12 +131,18 @@
 			c.Caption = "Employee";
 			c.EditorProperties().ComboBox(p =>
 			{
-				p.TextField = "Name";
-				p.ValueField = "EmployeeID";
-				p.DataSource = ViewBag.LookupEmployees;
+				p.TextField = "Text";
+				p.ValueField = "ID";
+				p.DataSource = Model.Employees;
 			});
 		});
-		settings.Columns.Add("OrderDate", MVCxGridViewColumnType.DateEdit);
+		//settings.Columns.Add("OrderDate", MVCxGridViewColumnType.DateEdit);
+		settings.Columns.Add(c => {
+			c.FieldName = "OrderDate";
+			c.SetDataItemTemplateContent(tpl => {
+				ViewContext.Writer.Write("<b>" + String.Format("{0:dd MMM yyyy}", DataBinder.Eval(tpl.DataItem, "OrderDate")) + "</b>");
+			});
+		});
 		settings.Columns.Add("RequiredDate", MVCxGridViewColumnType.DateEdit).AdaptivePriority = 1;
 		settings.Columns.Add("ShippedDate", MVCxGridViewColumnType.DateEdit);
 		settings.Columns.Add(c =>
@@ -144,9 +151,9 @@
 			c.Caption = "Shipper";
 			c.EditorProperties().ComboBox(p =>
 			{
-				p.TextField = "Name";
-				p.ValueField = "ShipperID";
-				p.DataSource = ViewBag.LookupShippers;
+				p.TextField = "Text";
+				p.ValueField = "ID";
+				p.DataSource = Model.Shippers;
 			});
 		});
 		settings.Columns.Add("ShipName");
@@ -163,4 +170,4 @@
 		grid.SetEditErrorText((string)ViewData["EditError"]);
 	}
 }
-@grid.Bind(Model).GetHtml()
+@grid.Bind(Model.Orders).GetHtml()

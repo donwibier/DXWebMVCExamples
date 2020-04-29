@@ -19,16 +19,16 @@ namespace DXWebNWind.Code.NWindEF
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public int ProductID { get; set; }
 
-        [Key]
+        //[Key]
         [Column(Order = 2, TypeName = "smallmoney")]
         public decimal UnitPrice { get; set; }
 
-        [Key]
+        //[Key]
         [Column(Order = 3)]
         [DatabaseGenerated(DatabaseGeneratedOption.None)]
         public short Quantity { get; set; }
 
-        [Key]
+        //[Key]
         [Column(Order = 4)]
         public float Discount { get; set; }
 

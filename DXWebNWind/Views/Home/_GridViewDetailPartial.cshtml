@@ -1,14 +1,22 @@
 @using DXWebNWind.Code.NWindEF
+@model DXWebNWind.Controllers.HomeViewDetailModel
 @{
 	var grid = Html.DevExpress().GridView<Order_Details>(settings => {
-		settings.Name = "GVDetail_" + ViewBag.OrderID;
+		settings.Name = "GVDetail_" + Model.OrderID;
 		//changed
 		settings.CallbackRouteValues = new { Controller = "Home", Action = "GridViewDetailPartial",
-			OrderID = ViewBag.OrderID };
+			OrderID = Model.OrderID
+		};
 
-		settings.SettingsEditing.AddNewRowRouteValues = new { Controller = "Home", Action = "GridViewDetailPartialAddNew" };
-		settings.SettingsEditing.UpdateRowRouteValues = new { Controller = "Home", Action = "GridViewDetailPartialUpdate" };
-		settings.SettingsEditing.DeleteRowRouteValues = new { Controller = "Home", Action = "GridViewDetailPartialDelete" };
+		settings.SettingsEditing.AddNewRowRouteValues = new { Controller = "Home", Action = "GridViewDetailPartialAddNew",
+			OrderID = Model.OrderID
+		};
+		settings.SettingsEditing.UpdateRowRouteValues = new { Controller = "Home", Action = "GridViewDetailPartialUpdate",
+			OrderID = Model.OrderID
+		};
+		settings.SettingsEditing.DeleteRowRouteValues = new { Controller = "Home", Action = "GridViewDetailPartialDelete",
+			OrderID = Model.OrderID
+		};
 		settings.SettingsEditing.Mode = GridViewEditingMode.EditFormAndDisplayRow;
 		settings.SettingsBehavior.ConfirmDelete = true;
 
@@ -21,6 +29,7 @@
 
 		settings.KeyFieldName = "OrderID;ProductID";
 		//changed
+		settings.EnableRowsCache = false;
 		settings.SettingsPager.Visible = false;
 		settings.Settings.ShowGroupPanel = false;
 		settings.Settings.ShowFilterRow = false;
@@ -33,9 +42,15 @@
 		settings.SettingsAdaptivity.HideDataCellsAtWindowInnerWidth = 0;
 
 		//changed
-		settings.Columns.Add("OrderID").Visible = false;
-		settings.Columns.Add("ProductID").Visible = false;
-		settings.Columns.Add(m => m.Products.ProductName);
+		settings.Columns.Add(c => {
+			c.FieldName = "ProductID";
+			c.EditorProperties().ComboBox(p =>
+			{
+				p.TextField = "Text";
+				p.ValueField = "ID";
+				p.DataSource = Model.Products;
+			});
+		});
 		settings.Columns.Add("UnitPrice").PropertiesEdit.DisplayFormatString="c";
 		settings.Columns.Add("Quantity");
 		settings.Columns.Add("Discount");
@@ -44,6 +59,7 @@
 			c.FieldName = "Total";
 			c.UnboundType = DevExpress.Data.UnboundColumnType.Decimal;
 			c.PropertiesEdit.DisplayFormatString = "c";
+			c.ReadOnly = true;
 		});
 
 		settings.CustomUnboundColumnData = (s, e) =>
@@ -55,7 +71,17 @@
 				e.Value = price * qty;
 			}
 		};
-		
+		settings.ClientSideEvents.BeginCallback = "OnDetailGridBeginCallback";
+		settings.ClientSideEvents.EndCallback = "OnDetailGridEndCallback";
+
+		settings.SettingsEditing.UseFormLayout = true;
+		settings.EditFormLayoutProperties.ColumnCount = 2;
+		settings.EditFormLayoutProperties.Items.Add("ProductID");
+		settings.EditFormLayoutProperties.Items.Add("UnitPrice");
+		settings.EditFormLayoutProperties.Items.Add("Quantity");
+		settings.EditFormLayoutProperties.Items.Add("Discount");
+		settings.EditFormLayoutProperties.Items.AddCommandItem();
+
 		settings.Settings.ShowFooter = true;
 		settings.TotalSummary.Add(DevExpress.Data.SummaryItemType.Sum, "Total");
 		settings.TotalSummary.Add(DevExpress.Data.SummaryItemType.Sum, "Quantity");
@@ -68,4 +94,4 @@
 		grid.SetEditErrorText((string)ViewData["EditError"]);
 	}
 }
-@grid.Bind(Model).GetHtml()
+@grid.Bind(Model.Details).GetHtml()
