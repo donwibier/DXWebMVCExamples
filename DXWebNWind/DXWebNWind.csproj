@@ -255,6 +255,7 @@
     <Compile Include="App_Start\WebApiConfig.cs" />
     <Compile Include="Code\AuthHelper.cs" />
     <Compile Include="Code\DBContext.cs" />
+    <Compile Include="Code\EFExtensions.cs" />
     <Compile Include="Code\NWindEF\Alphabetical_list_of_products.cs" />
     <Compile Include="Code\NWindEF\Categories.cs" />
     <Compile Include="Code\NWindEF\Category_Sales_for_1997.cs" />
@@ -293,6 +294,7 @@
     </Compile>
     <Compile Include="Models\Account\AccountViewModels.cs" />
     <Compile Include="Models\GridView\GridViewHelper.cs" />
+    <Compile Include="Models\HomeViewModels.cs" />
     <Compile Include="Models\Scheduler\SchedulerDataSource.cs" />
     <Compile Include="Models\Scheduler\SchedulerHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,33 +1,16 @@
-using DevExpress.Web.Mvc;
-using DXWebNWind.Code.NWindEF;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
+using DevExpress.Web.Mvc;
+using DXWebNWind.Code.NWindEF;
+using DXWebNWind.Models;
+using DXWebNWind.Code;
 
 namespace DXWebNWind.Controllers
 {
-	public class LookupItem<TID>
-	{
-		public TID ID { get; set; }
-		public string Text { get; set; }
-	}
-	public class HomeViewModel
-	{
-		public IEnumerable<Orders> Orders { get; set; }
-		public IEnumerable<LookupItem<string>> Customers { get; set; }
-		public IEnumerable<LookupItem<int>> Employees { get; set; }
-		public IEnumerable<LookupItem<int>> Shippers { get; set; }
-	}
-
-	public class HomeViewDetailModel
-	{
-		public int OrderID { get; set; }
-		public IEnumerable<Order_Details> Details { get; set; }
-		public IEnumerable<LookupItem<int>> Products { get; set; }
-	}
 
 	public class HomeController : Controller
 	{
@@ -36,8 +19,7 @@ namespace DXWebNWind.Controllers
 			return View();
 		}
 
-		//NWindDBContext nwindCtx = new NWindDBContext();
-		protected TResult DBExec<TResult>(Func<NWindDBContext, TResult> func)
+		public TResult DBExec<TResult>(Func<NWindDBContext, TResult> func)
 		{
 			using (NWindDBContext ctx = new NWindDBContext())
 			{
@@ -45,34 +27,21 @@ namespace DXWebNWind.Controllers
 				return result;
 			}
 		}
-		protected void DBExec(Action<NWindDBContext> action)
+		public void DBExec(Action<NWindDBContext> action)
 		{
 			using (NWindDBContext ctx = new NWindDBContext())
 			{
-				action(ctx);				
+				action(ctx);
 			}
 		}
-		protected IEnumerable<LookupItem<TID>> DBGetLookup<TID>(Func<NWindDBContext, IEnumerable<LookupItem<TID>>> func)
+		public IEnumerable<LookupItem<TID>> DBGetLookup<TID>(Func<NWindDBContext, IEnumerable<LookupItem<TID>>> func)
 		{
 			var result = DBExec(func);
 			return result;
 
 		}
-		//protected async Task<IEnumerable<LookupItem<TID>>> DBGetLookupAsync<TID>(Func<NWindDBContext, IEnumerable<LookupItem<TID>>> func)
-		//{
-		//	return await Task.FromResult(DBGetLookup(func));
-		//}
 
-		//protected async Task<TResult> DBExecAsync<TResult>(Func<NWindDBContext, TResult> func)
-		//{
-		//	return await Task.FromResult(DBExec(func));
-		//}
-
-		//protected async Task DBExecAsync(Action<NWindDBContext> action)
-		//{
-		//	await Task.Run(() => DBExec(action));
-		//}
-
+		//NWindDBContext nwindCtx = new NWindDBContext();
 		protected HomeViewModel GetModel()
 		{
 			var result = new HomeViewModel
@@ -202,7 +171,7 @@ namespace DXWebNWind.Controllers
 		}
 
 		[ValidateInput(false)]
-		public async Task<ActionResult> GridViewDetailPartial(int orderID)
+		public ActionResult GridViewDetailPartial(int orderID)
 		{
 			//changed			
 			return PartialView("_GridViewDetailPartial", GetDetailModel(orderID));

@@ -1,5 +1,5 @@
 @using DXWebNWind.Code.NWindEF
-@model DXWebNWind.Controllers.HomeViewDetailModel
+@model DXWebNWind.Models.HomeViewDetailModel
 @{
 	var grid = Html.DevExpress().GridView<Order_Details>(settings => {
 		settings.Name = "GVDetail_" + Model.OrderID;
