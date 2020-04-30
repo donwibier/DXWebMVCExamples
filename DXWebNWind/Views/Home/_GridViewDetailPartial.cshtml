@@ -72,16 +72,7 @@
 			}
 		};
 		settings.ClientSideEvents.BeginCallback = "OnDetailGridBeginCallback";
-		settings.ClientSideEvents.EndCallback = "OnDetailGridEndCallback";
-
-		settings.SettingsEditing.UseFormLayout = true;
-		settings.EditFormLayoutProperties.ColumnCount = 2;
-		settings.EditFormLayoutProperties.Items.Add("ProductID");
-		settings.EditFormLayoutProperties.Items.Add("UnitPrice");
-		settings.EditFormLayoutProperties.Items.Add("Quantity");
-		settings.EditFormLayoutProperties.Items.Add("Discount");
-		settings.EditFormLayoutProperties.Items.AddCommandItem();
-
+		
 		settings.Settings.ShowFooter = true;
 		settings.TotalSummary.Add(DevExpress.Data.SummaryItemType.Sum, "Total");
 		settings.TotalSummary.Add(DevExpress.Data.SummaryItemType.Sum, "Quantity");

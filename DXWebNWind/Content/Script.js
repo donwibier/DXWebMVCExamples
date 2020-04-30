@@ -122,20 +122,12 @@
     window.onEditOrdersPopup = onEditOrdersPopup;
     window.onEditOrdersCloseUp = onEditOrdersCloseUp;
 
-    //==
-    var currentProductID = null;    
+    //==    
     function OnDetailGridBeginCallback(s, e) {
-        if (e.command === "UPDATEEDIT") {
-            //e.customArgs["productID"] = currentProductID;
+        if (e.command === "UPDATEEDIT") {            
             e.customArgs["newProductID"] = s.GetEditValue("ProductID");
         }
     }
-    function OnDetailGridEndCallback(s, e) {
-        if (e.command === "STARTEDIT") {            
-            currentProductID = s.GetEditValue("ProductID");            
-		}
-    }
-    window.OnDetailGridEndCallback = OnDetailGridEndCallback;
     window.OnDetailGridBeginCallback = OnDetailGridBeginCallback;
 
     //==

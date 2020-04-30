@@ -41,50 +41,63 @@ namespace DXWebNWind.Controllers
 
 		}
 
-		//NWindDBContext nwindCtx = new NWindDBContext();
-		protected HomeViewModel GetModel()
+		public async Task<TResult> DBExecAsync<TResult>(Func<NWindDBContext, TResult> func)
+		{
+			return await Task.FromResult(DBExec(func));
+		}
+		public async Task DBExecAsync(Action<NWindDBContext> action)
+		{
+			await Task.Run(() => DBExec(action));
+		}
+
+		public async Task<IEnumerable<LookupItem<TID>>> DBGetLookupAsync<TID>(Func<NWindDBContext, IEnumerable<LookupItem<TID>>> func)
+		{
+			return await Task.FromResult(DBGetLookup(func));
+		}
+		
+		protected async Task<HomeViewModel> GetModel()
 		{
 			var result = new HomeViewModel
 			{
-				Customers = DBGetLookup<string>((db) => (from c in db.Customers
+				Customers = await DBGetLookupAsync<string>((db) => (from c in db.Customers
 																	select new LookupItem<string>
 																	{
 																		ID = c.CustomerID,
 																		Text = c.CompanyName
 																	}).ToList()),
-				Employees = DBGetLookup<int>((db) => (from c in db.Employees
+				Employees = await DBGetLookupAsync<int>((db) => (from c in db.Employees
 																 select new LookupItem<int>
 																 {
 																	 ID = c.EmployeeID,
 																	 Text = c.LastName + ", " + c.FirstName
 																 }).ToList()),
-				Shippers = DBGetLookup<int>((db) => (from s in db.Shippers
+				Shippers = await DBGetLookupAsync<int>((db) => (from s in db.Shippers
 																select new LookupItem<int>
 																{
 																	ID = s.ShipperID,
 																	Text = s.CompanyName
 																}).ToList()),
-				Orders = DBExec<IEnumerable<Orders>>((db) => db.Orders.ToList())
+				Orders = await DBExecAsync<IEnumerable<Orders>>((db) => db.Orders.ToList())
 			};
 
 			return result;
 		}
 
 		[ValidateInput(false)]
-		public ActionResult GridViewPartial()
+		public async Task<ActionResult> GridViewPartial()
 		{
-			var model = GetModel();
+			var model = await GetModel();
 			return PartialView("_GridViewPartial", model);
 		}
 
 		[HttpPost, ValidateInput(false)]
-		public ActionResult GridViewPartialAddNew(DXWebNWind.Code.NWindEF.Orders item)
+		public async Task<ActionResult> GridViewPartialAddNew(DXWebNWind.Code.NWindEF.Orders item)
 		{
 			if (ModelState.IsValid)
 			{
 				try
 				{
-					DBExec((db) =>
+					await DBExecAsync((db) =>
 					{
 						db.Orders.AddRange(new Orders[] { item });
 						db.SaveChanges();						
@@ -98,16 +111,16 @@ namespace DXWebNWind.Controllers
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
 
-			return PartialView("_GridViewPartial", GetModel());
+			return PartialView("_GridViewPartial", await GetModel());
 		}
 		[HttpPost, ValidateInput(false)]
-		public ActionResult GridViewPartialUpdate(DXWebNWind.Code.NWindEF.Orders item)
+		public async Task<ActionResult> GridViewPartialUpdate(DXWebNWind.Code.NWindEF.Orders item)
 		{
 			if (ModelState.IsValid)
 			{
 				try
 				{
-					DBExec((db) =>
+					await DBExecAsync((db) =>
 					{
 						var modelItem = db.Orders.FirstOrDefault(it => it.OrderID == item.OrderID);
 						if (modelItem != null)
@@ -125,16 +138,16 @@ namespace DXWebNWind.Controllers
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
 
-			return PartialView("_GridViewPartial", GetModel());
+			return PartialView("_GridViewPartial", await GetModel());
 		}
 		[HttpPost, ValidateInput(false)]
-		public ActionResult GridViewPartialDelete(System.Int32 OrderID)
+		public async Task<ActionResult> GridViewPartialDelete(System.Int32 OrderID)
 		{
 			if (OrderID >= 0)
 			{
 				try
 				{
-					DBExec((db) =>
+					await DBExecAsync((db) =>
 					{
 						var item = db.Orders.FirstOrDefault(it => it.OrderID == OrderID);
 						if (item != null)
@@ -148,22 +161,22 @@ namespace DXWebNWind.Controllers
 				}
 			}
 
-			return PartialView("_GridViewPartial", GetModel());
+			return PartialView("_GridViewPartial", await GetModel());
 		}
 
 		// added
-		protected HomeViewDetailModel GetDetailModel(int orderID)
+		protected async Task<HomeViewDetailModel> GetDetailModel(int orderID)
 		{
 			var result = new HomeViewDetailModel
 			{
 				OrderID = orderID,
-				Products = DBGetLookup<int>((db) => (from c in db.Products
+				Products = await DBGetLookupAsync<int>((db) => (from c in db.Products
 														   select new LookupItem<int>
 														   {
 															   ID = c.ProductID,
 															   Text = c.ProductName
 														   }).ToList()),
-				Details = DBExec<IEnumerable<Order_Details>>((db) => (from n in db.Order_Details
+				Details = await DBExecAsync<IEnumerable<Order_Details>>((db) => (from n in db.Order_Details
 																	  where (n.OrderID == orderID)
 																	  select n).ToList())
 			};
@@ -171,21 +184,21 @@ namespace DXWebNWind.Controllers
 		}
 
 		[ValidateInput(false)]
-		public ActionResult GridViewDetailPartial(int orderID)
+		public async Task<ActionResult> GridViewDetailPartial(int orderID)
 		{
 			//changed			
-			return PartialView("_GridViewDetailPartial", GetDetailModel(orderID));
+			return PartialView("_GridViewDetailPartial", await GetDetailModel(orderID));
 		}
 
 		[HttpPost, ValidateInput(false)]
-		public ActionResult GridViewDetailPartialAddNew(int orderID, Order_Details item)
+		public async Task<ActionResult> GridViewDetailPartialAddNew(int orderID, Order_Details item)
 		{
 			//changed
 			if (ModelState.IsValid)
 			{
 				try
 				{
-					DBExec((db) =>
+					await DBExecAsync((db) =>
 					{
 						db.Order_Details.AddRange(new Order_Details[] { item }); //changed
 						db.SaveChanges();
@@ -199,10 +212,10 @@ namespace DXWebNWind.Controllers
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
 
-			return PartialView("_GridViewDetailPartial", GetDetailModel(orderID));
+			return PartialView("_GridViewDetailPartial", await GetDetailModel(orderID));
 		}
 		[HttpPost, ValidateInput(false)]
-		public ActionResult GridViewDetailPartialUpdate(int orderID, int newProductID, Order_Details item)
+		public async Task<ActionResult> GridViewDetailPartialUpdate(int orderID, int newProductID, Order_Details item)
 		{
 			//changed
 			if (ModelState.IsValid)
@@ -210,7 +223,7 @@ namespace DXWebNWind.Controllers
 				try
 				{
 					//changed
-					DBExec((db) =>
+					await DBExecAsync((db) =>
 					{
 						var modelItem = db.Order_Details.FirstOrDefault(it => it.OrderID == orderID && it.ProductID == item.ProductID);
 						if (modelItem != null)
@@ -238,10 +251,10 @@ namespace DXWebNWind.Controllers
 			else
 				ViewData["EditError"] = "Please, correct all errors.";
 
-			return PartialView("_GridViewDetailPartial", GetDetailModel(orderID));
+			return PartialView("_GridViewDetailPartial", await GetDetailModel(orderID));
 		}
 		[HttpPost, ValidateInput(false)]
-		public ActionResult GridViewDetailPartialDelete(int orderID, int productID)
+		public async Task<ActionResult> GridViewDetailPartialDelete(int orderID, int productID)
 		{
 			//changed
 			if (orderID >= 0 && productID > 0)
@@ -249,7 +262,7 @@ namespace DXWebNWind.Controllers
 				try
 				{
 					//changed
-					DBExec((db) =>
+					await DBExecAsync((db) =>
 					{
 						var item = db.Order_Details.FirstOrDefault(it => it.OrderID == orderID && it.ProductID == productID);
 						if (item != null)
@@ -262,7 +275,7 @@ namespace DXWebNWind.Controllers
 					ViewData["EditError"] = e.Message;
 				}
 			}
-			return PartialView("_GridViewDetailPartial", GetDetailModel(orderID));
+			return PartialView("_GridViewDetailPartial", await GetDetailModel(orderID));
 		}
 	}
 }
